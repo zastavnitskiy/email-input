@@ -43,6 +43,10 @@
 
           window.alert(emailsInput.getCount());
         })
+
+        emailsInput.subscribe(list => {
+          console.log('Emails in the list', list);
+        })
         // Handling Add email and Get emails count buttons, etc.
       });
       
