@@ -8,42 +8,164 @@ interface Subscriber {
   (values: string[]): void
 }
 
-window.EmailsInput = class EmailsInput {
+interface SimpleHTMLElementAttributes {
+  [key: string]: string
+}
 
-  private values: string[]
-  private node: HTMLDivElement;
-  private interactiveInput: HTMLDivElement;
-  private textInput: HTMLDivElement;
+type PartialHTMLElement = Partial<HTMLElement>
+
+class Model {
+  private data: string[]
   private subscribers: Subscriber[];
 
-  public constructor(node: HTMLDivElement, options = {}){
-    this.node = node;
-    this.subscribers = [];
-    const children: HTMLInputElement[] = Array.from(node.querySelectorAll('input[name="email"]'));
-    children.forEach(child => child.setAttribute('type', 'hidden'));
-
-    this.values = Array.from(children).map(child => child.value).filter(Boolean)
-
-    this.interactiveInput = document.createElement('div');
-    this.node.appendChild(this.interactiveInput);
-
-    this.textInput = document.createElement('div');
-    this.textInput.innerHTML = `<input name="text-input" type="text" value="hello" />`;
-    this.node.appendChild(this.textInput);
-
-    this.render();
-    this.notifySubscribers()
-
-    this.node.addEventListener('focusout', this.handleFocusOutEvent.bind(this))
-    this.node.addEventListener('keydown', this.handleKeydownEvent.bind(this))
-    this.node.addEventListener('click', this.handleClick.bind(this))
-    this.node.addEventListener('input', this.handleInputEvent.bind(this))
+  constructor(values: string[]) {
+    this.data = values.map(value => value.trim()).filter(Boolean);
+    this.subscribers = [];  
   }
 
   private processRawInput(rawInput: string): string[] {
     const values = rawInput.split(',').map(s => s.trim()).filter(Boolean)
 
     return values;
+  }
+ 
+  addValue(value: string): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const cleanValues = this.processRawInput(value);
+        this.data = [...this.values, ...cleanValues];
+      } catch(e) {
+        reject('Failed to add new values')
+      }
+
+      try {
+        this.notifySubscribers();
+      } catch(e) {
+        // this is ok
+      }
+
+      resolve(this.values);
+    });
+  }
+
+  deleteValue(value: string): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        this.data = this.data.filter(existingValue => existingValue !== value);
+      } catch(e) {
+        reject('Failed to delete');
+      }
+
+      try {
+        this.notifySubscribers();
+      } catch(e) {
+        // this is ok
+      }
+
+      resolve(this.data);
+    });
+  }
+
+  private notifySubscribers() {
+    this.subscribers.forEach(subscriber => {
+      subscriber(this.values);
+    })
+  }
+
+  public get values(): string[] {
+    return this.data;
+  }
+
+  public subscribe(subscriber: Subscriber) {
+    this.subscribers = [...this.subscribers, subscriber];
+    subscriber(this.values);
+    return () => this.subscribers = this.subscribers.filter(existingSubscriber => existingSubscriber !== subscriber);
+  }
+}
+
+class ListRenderer {
+  private container: HTMLDivElement;
+  private values: string[];
+  private nodes: Map<string, HTMLDivElement>;
+
+  constructor(node: HTMLDivElement, values: string[]) {
+    this.container = node;
+    this.values = values;
+    this.nodes = new Map();
+  }
+
+  private createValueElement(value: string): HTMLDivElement {
+    const node = document.createElement('div');
+    node.innerText = value;
+
+    const deleteBtn = document.createElement('input');
+    deleteBtn.value = '×';
+    deleteBtn.type = 'button';
+    deleteBtn.name = 'delete-value';
+    deleteBtn.dataset['value'] = value;
+    node.appendChild(deleteBtn);
+    return node;
+  }
+
+  public update(values:string[]) {
+    const valuesSet = new Set(values);
+
+    values.forEach(value => {
+      if (!this.nodes.has(value)) {
+        const node = this.createValueElement(value);
+        this.nodes.set(value, node);
+        this.container.appendChild(node);
+      }
+    });
+
+    this.nodes.forEach((node, value) => {
+      if (!valuesSet.has(value)) {
+        this.container.removeChild(node);
+        this.nodes.delete(value);
+      }
+    })
+  }
+}
+
+window.EmailsInput = class EmailsInput {
+
+  // private values: string[]
+  private node: HTMLDivElement;
+  private interactiveInput: HTMLDivElement;
+  private textInput: HTMLInputElement;
+  
+  private model: Model;
+  private renderer: ListRenderer 
+  
+  public constructor(node: HTMLDivElement, options = {}){
+    this.node = node;
+
+    const children: HTMLInputElement[] = Array.from(node.querySelectorAll('input[name="email"]'));
+
+    const valuesFromHTML = children.map(child => child.value);
+    const valueNodes = children;
+
+    /** Prepare interactive HTML markup */
+    valueNodes.forEach(child => child.parentElement?.removeChild(child));
+
+    this.interactiveInput = document.createElement('div')
+    this.interactiveInput.className = 'interactive-input';
+    this.node.appendChild(this.interactiveInput);
+
+    this.textInput = document.createElement('input');
+    this.textInput.name = 'text-input';
+    this.textInput.type = 'text';
+    this.textInput.className = 'text-input';
+    this.node.appendChild(this.textInput);
+
+    /** Init data-model and prepare for interactivity */
+    this.model = new Model(valuesFromHTML);
+    this.renderer = new ListRenderer(this.interactiveInput, this.model.values);
+    this.model.subscribe(values => this.renderer.update(values));
+    this.node.addEventListener('focusout', this.handleFocusOutEvent.bind(this))
+    this.node.addEventListener('keydown', this.handleKeydownEvent.bind(this))
+    this.node.addEventListener('click', this.handleClick.bind(this))
+    this.node.addEventListener('input', this.handleInputEvent.bind(this))
   }
 
   private handleClick(event: MouseEvent) {
@@ -75,8 +197,9 @@ window.EmailsInput = class EmailsInput {
       if (keyCode === 13) {
           event.preventDefault();
     
-          this.addValue(target.value)
-          target.value = '';
+          this.addValue(target.value).then(() => {
+            target.value = '';
+          })
       }
     } 
   }
@@ -97,7 +220,6 @@ window.EmailsInput = class EmailsInput {
 
   private handleFocusOutEvent(event: FocusEvent) {
 
-    console.log('blur event')
     if (!event.target) {
       return;
     }
@@ -110,45 +232,22 @@ window.EmailsInput = class EmailsInput {
     }
   }
 
-  private render() {
-    let markup = '';
-    this.values.forEach(value => {
-      markup += `<div>${value} <button name="delete-value" data-value="${value}">×</button></div>`
-    });
-
-    this.interactiveInput.innerHTML = markup;
+  public addValue(rawInput: string): Promise<string[]> {
+    return this.model.addValue(rawInput)
+    
   }
 
-  private notifySubscribers() {
-    this.subscribers.forEach(subscriber => {
-      subscriber(this.values);
-    })
-  }
-
-  public addValue(valueToAdd: string): void {
-    const values = this.processRawInput(valueToAdd);
-    values.forEach(value => this.values.push(value))
-    this.render();
-    this.notifySubscribers();
-  }
-
-  public deleteValue(valueToDelete: string): void {
-    this.values = this.values.filter(value => value !== valueToDelete);
-    this.render();
-    this.notifySubscribers();
+  public deleteValue(valueToDelete: string): Promise<string[]> {
+    return this.model.deleteValue(valueToDelete)
   }
   
   public getCount(): number {
-    return this.values.length
+    return this.model.values.length
   }
 
   public subscribe(subscriber: Subscriber) {
-    this.subscribers = [...this.subscribers, subscriber];
-    subscriber(this.values);
-    return () => this.subscribers = this.subscribers.filter(existingSubscriber => existingSubscriber !== subscriber);
-  }
- 
-  
+    return this.model.subscribe(subscriber)
+  } 
 };
 
 
