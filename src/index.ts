@@ -14,7 +14,7 @@ window.EmailsInput = class EmailsInput {
   private node: HTMLDivElement;
   private interactiveInput: HTMLDivElement;
   private textInput: HTMLDivElement;
-  private subscribers: Subscriber[]
+  private subscribers: Subscriber[];
 
   public constructor(node: HTMLDivElement, options = {}){
     this.node = node;
