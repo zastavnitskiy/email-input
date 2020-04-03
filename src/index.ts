@@ -136,6 +136,14 @@ class View {
     deleteBtn.classList.add("interactive-input-delete-btn");
     deleteBtn.dataset["value"] = value.value;
     node.appendChild(deleteBtn);
+
+    if (value.valid) {
+      const dataInput = document.createElement('input');
+      dataInput.value = value.value;
+      dataInput.type = 'hidden';
+      dataInput.name = "email";
+      node.appendChild(dataInput);
+    }
     return node;
   }
 
@@ -151,7 +159,6 @@ class View {
         const node = this.createValueElement(value);
         this.nodes.set(value.value, node);
         this.appendValueNode(node);
-        
       }
     });
 
@@ -162,6 +169,8 @@ class View {
       }
     });
   }
+
+
 }
 
 window.EmailsInput = class EmailsInput {
@@ -190,11 +199,10 @@ window.EmailsInput = class EmailsInput {
     this.interactiveInputContainer.classList.add("interactive-input-container");
     this.node.appendChild(this.interactiveInputContainer);
 
-    valueNodes.forEach(child => child.setAttribute("hidden", "hidden"));
-
-    // this.interactiveInput = document.createElement("div");
-    // this.interactiveInput.className = "interactive-input";
-    // this.interactiveInputContainer.appendChild(this.interactiveInput);
+    valueNodes.forEach(child => {
+      child.setAttribute("hidden", "hidden")
+      child.setAttribute("disabled", "disabled");
+    });
 
     /** Init data-model and prepare for interactivity */
     this.model = new Model(valuesFromHTML);
