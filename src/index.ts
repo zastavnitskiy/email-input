@@ -117,22 +117,14 @@ window.EmailsInput = class EmailsInput {
     return this.model.deleteItem(valueToDelete);
   }
 
-  public getCount(): number {
-    return this.model.items.length;
-  }
-
-  public getValues(): string[] {
-    return this.model.items.map(({value}) => value);
+  public getAll(): string[] {
+    return this.model.items.map(({ value }) => value);
   }
 
   public replaceAll(values: string[]) {
-    this.getValues().forEach(value => {
-      this.model.deleteItem(value);
-    })
-
-    values.forEach(value => {
-      this.model.addItem(value)
-    })
+    Promise.all(
+      this.getAll().map(value => this.model.deleteItem(value))
+    ).then(() => Promise.all(values.map(value => this.model.addItem(value))));
   }
 
   public subscribe(subscriber: Subscriber) {

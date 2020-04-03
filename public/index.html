@@ -37,7 +37,6 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
-    <!-- form header -->
     <form class="interactive-input-preview">
       <div id="emails-input">
         <h2>Share <strong>Board name</strong> with others</h2>
@@ -52,6 +51,90 @@
         <button id="get-emails-count" class="btn">Get Emails Count</button>
       </div>
     </form>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", function () {
+        var inputContainerNode = document.querySelector("#emails-input");
+        var emailsInput = new EmailsInput(inputContainerNode, {});
+
+        document.getElementById("add-email").addEventListener("click", e => {
+          e.preventDefault();
+
+          emailsInput.addItem(randomEmail());
+        });
+
+        document
+          .getElementById("get-emails-count")
+          .addEventListener("click", e => {
+            e.preventDefault();
+
+            window.alert(emailsInput.getValues().length);
+          });
+
+        emailsInput.subscribe(list => {
+          console.log("Emails in the list", list);
+        });
+        // Handling Add email and Get emails count buttons, etc.
+      });
+    </script>
+
+    <div style="width: 500px;">
+      <form class="interactive-input-preview">
+        <div id="emails-input2">
+          <h2>Share <strong>Board name</strong> with others</h2>
+
+          <input
+            type="text"
+            name="email"
+            value="pasha.zastavnitskiy@gmail.com"
+          />
+          <input type="text" name="email" value="zapav@ya.ru" />
+        </div>
+        <div class="form-additional-actions">
+          <button id="copy-emails" class="btn">Show all values</button>
+          <button id="replace-emails" class="btn">Replace emails</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- form footer, buttons -->
+    <script>
+      window.addEventListener("DOMContentLoaded", function () {
+        var inputContainerNode = document.querySelector("#emails-input2");
+        var emailsInput = new EmailsInput(inputContainerNode, {});
+
+        document.getElementById("copy-emails").addEventListener("click", e => {
+          e.preventDefault();
+
+          window.alert(emailsInput.getAll().join(","));
+        });
+
+        document
+          .getElementById("replace-emails")
+          .addEventListener("click", e => {
+            e.preventDefault();
+
+            const count = emailsInput.getAll().length || 5;
+
+            const newEmails = new Array(count)
+              .fill("")
+              .map(() => randomEmail());
+
+            emailsInput.replaceAll(newEmails);
+          });
+      });
+    </script>
+
+    <!-- Basic example — no incoming data, no api usage -->
+    <form class="interactive-input-preview">
+      <div id="custom-input"></div>
+    </form>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", function () {
+        new EmailsInput(document.querySelector("#custom-input"));
+      });
+    </script>
 
     <script>
       function randomInt(upTo = 2) {
@@ -74,60 +157,6 @@
 
         return `${name}@${domain}`;
       }
-
-      window.addEventListener("DOMContentLoaded", function () {
-        var inputContainerNode = document.querySelector("#emails-input");
-        var emailsInput = new EmailsInput(inputContainerNode, {});
-
-        document.getElementById("add-email").addEventListener("click", e => {
-          e.preventDefault();
-
-          emailsInput.addItem(randomEmail());
-        });
-
-        document
-          .getElementById("get-emails-count")
-          .addEventListener("click", e => {
-            e.preventDefault();
-
-            window.alert(emailsInput.getCount());
-          });
-
-        emailsInput.subscribe(list => {
-          console.log("Emails in the list", list);
-        });
-        // Handling Add email and Get emails count buttons, etc.
-      });</script>
-
-    <div style="width: 500px;">
-      <form class="interactive-input-preview">
-        <div id="emails-input2">
-          <h2>Share <strong>Board name</strong> with others</h2>
-
-          <input
-            type="text"
-            name="email"
-            value="pasha.zastavnitskiy@gmail.com"
-          />
-          <input type="text" name="email" value="zapav@ya.ru" />
-        </div>
-        <div class="form-additional-actions">
-          <button id="copy-emails" class="btn">Show all values</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- form footer, buttons -->
-    <script>
-      window.addEventListener("DOMContentLoaded", function () {
-        var inputContainerNode = document.querySelector("#emails-input2");
-        var emailsInput = new EmailsInput(inputContainerNode, {});
-        document.getElementById("copy-emails").addEventListener("click", e => {
-          e.preventDefault();
-
-          window.alert(emailsInput.getValues().map(({value}) => value).join(','));
-        });
-      });
     </script>
   </body>
 </html>
