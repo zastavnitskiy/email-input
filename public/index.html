@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Miro Email Input</title>
     <style>
+      /**  Some basic markup to make the preview page cleaner */
       .interactive-input-preview {
         padding: 0;
         border: none;
@@ -35,8 +36,6 @@
     </style>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-
     <form class="interactive-input-preview">
       <div id="emails-input">
         <h2>Share <strong>Board name</strong> with others</h2>
@@ -68,7 +67,7 @@
           .addEventListener("click", e => {
             e.preventDefault();
 
-            window.alert(emailsInput.getValues().length);
+            window.alert(emailsInput.getAll().length);
           });
 
         emailsInput.subscribe(list => {
@@ -97,7 +96,6 @@
       </form>
     </div>
 
-    <!-- form footer, buttons -->
     <script>
       window.addEventListener("DOMContentLoaded", function () {
         var inputContainerNode = document.querySelector("#emails-input2");
@@ -142,7 +140,29 @@
       }
 
       function randomEmail() {
-        const names = ["john", "mike", "alex", "pavel", "sergey", "panda"];
+        const names = [
+          "Liam",
+          "Emma",
+          "Noah",
+          "Olivia",
+          "William",
+          "Ava",
+          "James",
+          "Isabella",
+          "Oliver",
+          "Sophia",
+          "Benjamin",
+          "Charlotte",
+          "Elijah",
+          "Mia",
+          "Lucas",
+          "Amelia",
+          "Mason",
+          "Harper10",
+          "Logan",
+          "Evelyn"
+        ].map(name => name.toLowerCase());
+        
         const domains = [
           "miro.com",
           "email",
