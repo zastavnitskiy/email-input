@@ -32,6 +32,7 @@
         font-family: "Open Sans", sans-serif;
         border: 0;
         outline: 0;
+        cursor: pointer;
       }
     </style>
   </head>
@@ -77,24 +78,35 @@
       });
     </script>
 
-    <div style="width: 500px;">
-      <form class="interactive-input-preview">
+    <form
+      class="interactive-input-preview"
+    >
+      <!-- this is an example of a container with limited height — our widget will be scrollable -->
+      <div style="height: 300px; overflow: hidden;">
         <div id="emails-input2">
           <h2>Share <strong>Board name</strong> with others</h2>
 
-          <input
-            type="text"
-            name="email"
-            value="pasha.zastavnitskiy@gmail.com"
-          />
+          <input type="text" name="email" value="pasha.zastavnitskiy@gmail.com" />
+
           <input type="text" name="email" value="zapav@ya.ru" />
+          <input value="john@miro.com" name="email" type="text" />
+          <input value="invalid.email" name="email" type="text" />
+          <input value="mike@miro.com" name="email" type="text" />
+          <input value="alexander@miro.com" name="email" type="text" />
+          <input value="harper10@email" name="email" type="text" />
+          <input value="elijah@yandex.ru" name="email" type="text" />
+          <input value="isabella@yandex.ru" name="email" type="text" />
+          <input value="oliver@yandex.ru" name="email" type="text" />
+          <input value="benjamin@gmail.com" name="email" type="text" />
+          <input value="mia@gmail.com" name="email" type="text" />
+          <input value="harper10@yandex.ru" name="email" type="text" />
         </div>
-        <div class="form-additional-actions">
-          <button id="copy-emails" class="btn">Show all values</button>
-          <button id="replace-emails" class="btn">Replace emails</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="form-additional-actions">
+        <button id="copy-emails" class="btn">Show all values</button>
+        <button id="replace-emails" class="btn">Replace emails</button>
+      </div>
+    </form>
 
     <script>
       window.addEventListener("DOMContentLoaded", function () {
@@ -162,7 +174,7 @@
           "Logan",
           "Evelyn"
         ].map(name => name.toLowerCase());
-        
+
         const domains = [
           "miro.com",
           "email",
