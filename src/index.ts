@@ -1,176 +1,11 @@
 import "./index.css";
+import { Item, Model, Subscriber } from "./Model";
+import { View } from "./View";
 
 declare global {
   interface Window {
     EmailsInput: any;
   }
-}
-
-interface Subscriber {
-  (values: Item[]): void;
-}
-
-interface Item {
-  valid: boolean,
-  value: string
-}
-
-class Model {
-  private data: Item[];
-  private subscribers: Subscriber[];
-
-  constructor(items: string[]) {
-    this.data = this.createItems(items);
-    this.subscribers = [];
-  }
-
-  private createItems(values: string[]): Item[] {
-    return values.map(value => value.trim()).filter(Boolean).map(value => this.createItem(value))
-  }
-
-  private createItem(value: string): Item {
-    return {
-      valid: this.validate(value),
-      value
-    }
-  }
-
-  private validate(text: string): boolean {
-    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(text.toLowerCase());
-  }
-
-  private processRawInput(rawInput: string): string[] {
-    const values = rawInput
-      .split(",")
-
-    return values;
-  }
-
-  addItem(value: string): Promise<Item[]> {
-    return new Promise((resolve, reject) => {
-      try {
-        const items = this.createItems(this.processRawInput(value));
-        this.data = [...this.data, ...items];
-      } catch (e) {
-        reject("Failed to add new values");
-      }
-
-      try {
-        this.notifySubscribers();
-      } catch (e) {
-        // this is ok
-      }
-
-      resolve(this.data);
-    });
-  }
-
-  deleteItem(value: string): Promise<Item[]> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.data = this.data.filter(item => item.value !== value);
-      } catch (e) {
-        reject("Failed to delete");
-      }
-
-      try {
-        this.notifySubscribers();
-      } catch (e) {
-        // this is ok
-      }
-
-      resolve(this.data);
-    });
-  }
-
-  private notifySubscribers() {
-    this.subscribers.forEach(subscriber => {
-      subscriber(this.data);
-    });
-  }
-
-  public get items(): Item[] {
-    return this.data;
-  }
-
-  public subscribe(subscriber: Subscriber) {
-    this.subscribers = [...this.subscribers, subscriber];
-    subscriber(this.data);
-    return () =>
-      (this.subscribers = this.subscribers.filter(
-        existingSubscriber => existingSubscriber !== subscriber
-      ));
-  }
-}
-
-class View {
-  private container: HTMLDivElement;
-  private nodes: Map<string, HTMLDivElement>;
-  private textInput: HTMLInputElement;
-
-  constructor(node: HTMLDivElement, items: Item[]) {
-    this.container = node;
-    this.nodes = new Map();
-
-    this.textInput = document.createElement("input");
-    this.textInput.name = "text-input";
-    this.textInput.type = "text";
-    this.textInput.className = "interactive-input-new-value";
-    this.textInput.placeholder = "add more people...";
-    this.container.appendChild(this.textInput);
-  }
-
-  private createItemNode(item: Item): HTMLDivElement {
-    const node = document.createElement("div");
-    node.classList.add("interactive-input-value");
-    node.innerText = item.value;
-    if (!item.valid) {
-      node.classList.add('interactive-input-value__invalid')
-    }
-
-    const deleteBtn = document.createElement("input");
-    deleteBtn.value = "×";
-    deleteBtn.type = "button";
-    deleteBtn.name = "delete-value";
-    deleteBtn.classList.add("interactive-input-delete-btn");
-    deleteBtn.dataset["value"] = item.value;
-    node.appendChild(deleteBtn);
-
-    if (item.valid) {
-      const dataInput = document.createElement('input');
-      dataInput.value = item.value;
-      dataInput.type = 'hidden';
-      dataInput.name = "email";
-      node.appendChild(dataInput);
-    }
-    return node;
-  }
-
-  private appendItemNode(valueNode: HTMLDivElement) {
-    this.container.insertBefore(valueNode, this.textInput);
-  }
-
-  public update(items: Item[]) {
-    const valuesSet = new Set(items.map(({value}) => value));
-
-    items.forEach((item) => {
-      if (!this.nodes.has(item.value)) {
-        const node = this.createItemNode(item);
-        this.nodes.set(item.value, node);
-        this.appendItemNode(node);
-      }
-    });
-
-    this.nodes.forEach((node, value) => {
-      if (!valuesSet.has(value)) {
-        this.container.removeChild(node);
-        this.nodes.delete(value);
-      }
-    });
-  }
-
-
 }
 
 window.EmailsInput = class EmailsInput {
@@ -187,9 +22,10 @@ window.EmailsInput = class EmailsInput {
       node.querySelectorAll('input[name="email"]')
     );
 
+    /** Read values from html and disable existing inputs */
     const valuesFromHTML = children.map(child => child.value);
     children.forEach(child => {
-      child.setAttribute("hidden", "hidden")
+      child.setAttribute("hidden", "hidden");
       child.setAttribute("disabled", "disabled");
     });
 
@@ -285,8 +121,18 @@ window.EmailsInput = class EmailsInput {
     return this.model.items.length;
   }
 
-  public getItems(): Item[] {
-    return this.model.items;
+  public getValues(): string[] {
+    return this.model.items.map(({value}) => value);
+  }
+
+  public replaceAll(values: string[]) {
+    this.getValues().forEach(value => {
+      this.model.deleteItem(value);
+    })
+
+    values.forEach(value => {
+      this.model.addItem(value)
+    })
   }
 
   public subscribe(subscriber: Subscriber) {

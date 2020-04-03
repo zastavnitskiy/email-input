@@ -103,7 +103,7 @@
       <form class="interactive-input-preview">
         <div id="emails-input2">
           <h2>Share <strong>Board name</strong> with others</h2>
-          
+
           <input
             type="text"
             name="email"
@@ -125,7 +125,7 @@
         document.getElementById("copy-emails").addEventListener("click", e => {
           e.preventDefault();
 
-          window.alert(emailsInput.getItems().map(({value}) => value).join(','));
+          window.alert(emailsInput.getValues().map(({value}) => value).join(','));
         });
       });
     </script>
