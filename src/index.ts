@@ -10,12 +10,6 @@ interface Subscriber {
   (values: string[]): void;
 }
 
-interface SimpleHTMLElementAttributes {
-  [key: string]: string;
-}
-
-type PartialHTMLElement = Partial<HTMLElement>;
-
 class Model {
   private data: string[];
   private subscribers: Subscriber[];
@@ -91,15 +85,21 @@ class Model {
   }
 }
 
-class ListRenderer {
+class View {
   private container: HTMLDivElement;
-  private values: string[];
   private nodes: Map<string, HTMLDivElement>;
+  private textInput: HTMLInputElement;
 
   constructor(node: HTMLDivElement, values: string[]) {
     this.container = node;
-    this.values = values;
     this.nodes = new Map();
+
+    this.textInput = document.createElement("input");
+    this.textInput.name = "text-input";
+    this.textInput.type = "text";
+    this.textInput.className = "interactive-input-new-value";
+    this.textInput.placeholder = "add more people...";
+    this.container.appendChild(this.textInput);
   }
 
   private createValueElement(value: string): HTMLDivElement {
@@ -117,6 +117,10 @@ class ListRenderer {
     return node;
   }
 
+  private appendValueNode(valueNode: HTMLDivElement) {
+    this.container.insertBefore(valueNode, this.textInput);
+  }
+
   public update(values: string[]) {
     const valuesSet = new Set(values);
 
@@ -124,7 +128,7 @@ class ListRenderer {
       if (!this.nodes.has(value)) {
         const node = this.createValueElement(value);
         this.nodes.set(value, node);
-        this.container.appendChild(node);
+        this.appendValueNode(node);
       }
     });
 
@@ -143,10 +147,8 @@ window.EmailsInput = class EmailsInput {
   private interactiveInputContainer: HTMLDivElement;
   private interactiveInput: HTMLDivElement;
 
-  private textInput: HTMLInputElement;
-
   private model: Model;
-  private renderer: ListRenderer;
+  private view: View;
 
   public constructor(node: HTMLDivElement, options = {}) {
     this.node = node;
@@ -171,17 +173,10 @@ window.EmailsInput = class EmailsInput {
     this.interactiveInput.className = "interactive-input";
     this.interactiveInputContainer.appendChild(this.interactiveInput);
 
-    this.textInput = document.createElement("input");
-    this.textInput.name = "text-input";
-    this.textInput.type = "text";
-    this.textInput.className = "text-input";
-    this.textInput.placeholder = "add more people...";
-    this.interactiveInputContainer.appendChild(this.textInput);
-
     /** Init data-model and prepare for interactivity */
     this.model = new Model(valuesFromHTML);
-    this.renderer = new ListRenderer(this.interactiveInput, this.model.values);
-    this.model.subscribe(values => this.renderer.update(values));
+    this.view = new View(this.interactiveInput, this.model.values);
+    this.model.subscribe(values => this.view.update(values));
     this.node.addEventListener("focusout", this.handleFocusOutEvent.bind(this));
     this.node.addEventListener("keydown", this.handleKeydownEvent.bind(this));
     this.node.addEventListener("click", this.handleClick.bind(this));
