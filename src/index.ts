@@ -96,12 +96,14 @@ class ListRenderer {
 
   private createValueElement(value: string): HTMLDivElement {
     const node = document.createElement('div');
+    node.classList.add('interactive-input-value');
     node.innerText = value;
 
     const deleteBtn = document.createElement('input');
     deleteBtn.value = '×';
     deleteBtn.type = 'button';
     deleteBtn.name = 'delete-value';
+    deleteBtn.classList.add('interactive-input-delete-btn')
     deleteBtn.dataset['value'] = value;
     node.appendChild(deleteBtn);
     return node;
@@ -131,7 +133,9 @@ window.EmailsInput = class EmailsInput {
 
   // private values: string[]
   private node: HTMLDivElement;
+  private interactiveInputContainer: HTMLDivElement;
   private interactiveInput: HTMLDivElement;
+  
   private textInput: HTMLInputElement;
   
   private model: Model;
@@ -146,17 +150,25 @@ window.EmailsInput = class EmailsInput {
     const valueNodes = children;
 
     /** Prepare interactive HTML markup */
-    valueNodes.forEach(child => child.parentElement?.removeChild(child));
+    this.node.classList.add('interactive-input-host');
+
+    this.interactiveInputContainer = document.createElement('div');
+    this.interactiveInputContainer.classList.add('interactive-input-container');
+    this.node.appendChild(this.interactiveInputContainer);    
+
+    valueNodes.forEach(child => child.setAttribute('hidden', 'hidden'));
+
 
     this.interactiveInput = document.createElement('div')
     this.interactiveInput.className = 'interactive-input';
-    this.node.appendChild(this.interactiveInput);
+    this.interactiveInputContainer.appendChild(this.interactiveInput);
 
     this.textInput = document.createElement('input');
     this.textInput.name = 'text-input';
     this.textInput.type = 'text';
     this.textInput.className = 'text-input';
-    this.node.appendChild(this.textInput);
+    this.textInput.placeholder = 'add more people...';
+    this.interactiveInputContainer.appendChild(this.textInput);
 
     /** Init data-model and prepare for interactivity */
     this.model = new Model(valuesFromHTML);
@@ -243,6 +255,10 @@ window.EmailsInput = class EmailsInput {
   
   public getCount(): number {
     return this.model.values.length
+  }
+
+  public getValues(): string[] {
+    return this.model.values;
   }
 
   public subscribe(subscriber: Subscriber) {
