@@ -1,10 +1,12 @@
 export interface Subscriber {
   (values: Item[]): void;
 }
+
 export interface Item {
   valid: boolean;
   value: string;
 }
+
 export class Model {
   private data: Item[];
   private subscribers: Subscriber[];

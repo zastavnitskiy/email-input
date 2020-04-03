@@ -62,8 +62,9 @@
           >source code</a
         >.
       </p>
-      <p>Pavel</p>
+      <p>— Pavel</p>
     </div>
+    
     <form class="interactive-input-preview">
       <div id="emails-input">
         <h2>Share <strong>Board name</strong> with others</h2>
@@ -101,15 +102,14 @@
         emailsInput.subscribe(list => {
           console.log("Emails in the list", list);
         });
-        // Handling Add email and Get emails count buttons, etc.
       });
     </script>
 
-    <form class="interactive-input-preview">
-      <!-- this is an example of a container with limited height — our widget will be scrollable -->
+    <!-- Limited width and height example - list of emails will be scrollable -->
+    <form class="interactive-input-preview" style="width: 500px;">
       <div style="height: 300px; overflow: hidden;">
         <div id="emails-input2">
-          <h2>Example with limited container width and height</h2>
+          <h2>Limited width and height example</h2>
 
           <input
             type="text"
@@ -175,6 +175,7 @@
       });
     </script>
 
+    <!-- Helper functions for demo purposes -->
     <script>
       function randomInt(upTo = 2) {
         return Math.ceil(Math.random() * upTo);

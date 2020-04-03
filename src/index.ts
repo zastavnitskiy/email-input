@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-window.EmailsInput = class EmailsInput {
+class EmailsInput {
   private node: HTMLDivElement;
   private interactiveInputContainer: HTMLDivElement;
 
@@ -131,3 +131,5 @@ window.EmailsInput = class EmailsInput {
     return this.model.subscribe(subscriber);
   }
 };
+
+window.EmailsInput = EmailsInput
