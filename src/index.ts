@@ -7,32 +7,51 @@ declare global {
 }
 
 interface Subscriber {
-  (values: string[]): void;
+  (values: Value[]): void;
+}
+
+interface Value {
+  valid: boolean,
+  value: string
 }
 
 class Model {
-  private data: string[];
+  private data: Value[];
   private subscribers: Subscriber[];
 
   constructor(values: string[]) {
-    this.data = values.map(value => value.trim()).filter(Boolean);
+    this.data = this.createValues(values);
     this.subscribers = [];
+  }
+
+  private createValues(values: string[]): Value[] {
+    return values.map(value => value.trim()).filter(Boolean).map(text => this.createValue(text))
+  }
+
+  private createValue(value: string): Value {
+    return {
+      valid: this.validate(value),
+      value
+    }
+  }
+
+  private validate(text: string): boolean {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(text.toLowerCase());
   }
 
   private processRawInput(rawInput: string): string[] {
     const values = rawInput
       .split(",")
-      .map(s => s.trim())
-      .filter(Boolean);
 
     return values;
   }
 
-  addValue(value: string): Promise<string[]> {
+  addValue(value: string): Promise<Value[]> {
     return new Promise((resolve, reject) => {
       try {
-        const cleanValues = this.processRawInput(value);
-        this.data = [...this.values, ...cleanValues];
+        const cleanValues = this.createValues(this.processRawInput(value));
+        this.data = [...this.data, ...cleanValues];
       } catch (e) {
         reject("Failed to add new values");
       }
@@ -47,10 +66,10 @@ class Model {
     });
   }
 
-  deleteValue(value: string): Promise<string[]> {
+  deleteValue(value: string): Promise<Value[]> {
     return new Promise((resolve, reject) => {
       try {
-        this.data = this.data.filter(existingValue => existingValue !== value);
+        this.data = this.data.filter(existingValue => existingValue.value !== value);
       } catch (e) {
         reject("Failed to delete");
       }
@@ -71,7 +90,7 @@ class Model {
     });
   }
 
-  public get values(): string[] {
+  public get values(): Value[] {
     return this.data;
   }
 
@@ -90,7 +109,7 @@ class View {
   private nodes: Map<string, HTMLDivElement>;
   private textInput: HTMLInputElement;
 
-  constructor(node: HTMLDivElement, values: string[]) {
+  constructor(node: HTMLDivElement, values: Value[]) {
     this.container = node;
     this.nodes = new Map();
 
@@ -102,17 +121,20 @@ class View {
     this.container.appendChild(this.textInput);
   }
 
-  private createValueElement(value: string): HTMLDivElement {
+  private createValueElement(value: Value): HTMLDivElement {
     const node = document.createElement("div");
     node.classList.add("interactive-input-value");
-    node.innerText = value;
+    node.innerText = value.value;
+    if (!value.valid) {
+      node.classList.add('interactive-input-value__invalid')
+    }
 
     const deleteBtn = document.createElement("input");
     deleteBtn.value = "×";
     deleteBtn.type = "button";
     deleteBtn.name = "delete-value";
     deleteBtn.classList.add("interactive-input-delete-btn");
-    deleteBtn.dataset["value"] = value;
+    deleteBtn.dataset["value"] = value.value;
     node.appendChild(deleteBtn);
     return node;
   }
@@ -121,14 +143,15 @@ class View {
     this.container.insertBefore(valueNode, this.textInput);
   }
 
-  public update(values: string[]) {
-    const valuesSet = new Set(values);
+  public update(values: Value[]) {
+    const valuesSet = new Set(values.map(({value}) => value));
 
-    values.forEach(value => {
-      if (!this.nodes.has(value)) {
+    values.forEach((value) => {
+      if (!this.nodes.has(value.value)) {
         const node = this.createValueElement(value);
-        this.nodes.set(value, node);
+        this.nodes.set(value.value, node);
         this.appendValueNode(node);
+        
       }
     });
 
@@ -145,7 +168,7 @@ window.EmailsInput = class EmailsInput {
   // private values: string[]
   private node: HTMLDivElement;
   private interactiveInputContainer: HTMLDivElement;
-  private interactiveInput: HTMLDivElement;
+  // private interactiveInput: HTMLDivElement;
 
   private model: Model;
   private view: View;
@@ -169,13 +192,13 @@ window.EmailsInput = class EmailsInput {
 
     valueNodes.forEach(child => child.setAttribute("hidden", "hidden"));
 
-    this.interactiveInput = document.createElement("div");
-    this.interactiveInput.className = "interactive-input";
-    this.interactiveInputContainer.appendChild(this.interactiveInput);
+    // this.interactiveInput = document.createElement("div");
+    // this.interactiveInput.className = "interactive-input";
+    // this.interactiveInputContainer.appendChild(this.interactiveInput);
 
     /** Init data-model and prepare for interactivity */
     this.model = new Model(valuesFromHTML);
-    this.view = new View(this.interactiveInput, this.model.values);
+    this.view = new View(this.interactiveInputContainer, this.model.values);
     this.model.subscribe(values => this.view.update(values));
     this.node.addEventListener("focusout", this.handleFocusOutEvent.bind(this));
     this.node.addEventListener("keydown", this.handleKeydownEvent.bind(this));
@@ -245,11 +268,11 @@ window.EmailsInput = class EmailsInput {
     }
   }
 
-  public addValue(rawInput: string): Promise<string[]> {
+  public addValue(rawInput: string): Promise<Value[]> {
     return this.model.addValue(rawInput);
   }
 
-  public deleteValue(valueToDelete: string): Promise<string[]> {
+  public deleteValue(valueToDelete: string): Promise<Value[]> {
     return this.model.deleteValue(valueToDelete);
   }
 
@@ -257,7 +280,7 @@ window.EmailsInput = class EmailsInput {
     return this.model.values.length;
   }
 
-  public getValues(): string[] {
+  public getValues(): Value[] {
     return this.model.values;
   }
 

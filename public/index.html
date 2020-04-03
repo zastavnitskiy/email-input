@@ -15,12 +15,6 @@
         border-radius: 8px;
       }
 
-      .interactive-input-preview fieldset {
-        border: none;
-        padding: 0;
-        margin: 0;
-      }
-
       .form-additional-actions {
         padding: 24px 50px 32px 50px;
         border-radius: 0 0 8px 8px;
@@ -48,8 +42,10 @@
       <div id="emails-input">
         <h2>Share <strong>Board name</strong> with others</h2>
 
-        <input type="text" name="email" value="pasha.zastavnitskiy@gmail.com" />
-        <input type="text" name="email" value="zapav@ya.ru" />
+        <input type="text" name="email" value="john@miro.com" />
+        <input type="text" name="email" value="invalid.email" />
+        <input type="text" name="email" value="mike@miro.com" />
+        <input type="text" name="email" value="alexander@miro.com" />
       </div>
       <div class="form-additional-actions">
         <button id="add-email" class="btn">Add Email</button>
@@ -57,25 +53,6 @@
       </div>
     </form>
 
-    <div style="width: 500px;">
-      <form class="interactive-input-preview">
-        <div id="emails-input2">
-          <h2>Share <strong>Board name</strong> with others</h2>
-
-          <input
-            type="text"
-            name="email"
-            value="pasha.zastavnitskiy@gmail.com"
-          />
-          <input type="text" name="email" value="zapav@ya.ru" />
-        </div>
-        <div class="form-additional-actions">
-          <button id="copy-emails" class="btn">Show all values</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- form footer, buttons -->
     <script>
       function randomInt(upTo = 2) {
         return Math.ceil(Math.random() * upTo);
@@ -120,15 +97,35 @@
           console.log("Emails in the list", list);
         });
         // Handling Add email and Get emails count buttons, etc.
-      });
+      });</script>
 
+    <div style="width: 500px;">
+      <form class="interactive-input-preview">
+        <div id="emails-input2">
+          <h2>Share <strong>Board name</strong> with others</h2>
+
+          <input
+            type="text"
+            name="email"
+            value="pasha.zastavnitskiy@gmail.com"
+          />
+          <input type="text" name="email" value="zapav@ya.ru" />
+        </div>
+        <div class="form-additional-actions">
+          <button id="copy-emails" class="btn">Show all values</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- form footer, buttons -->
+    <script>
       window.addEventListener("DOMContentLoaded", function () {
         var inputContainerNode = document.querySelector("#emails-input2");
         var emailsInput = new EmailsInput(inputContainerNode, {});
         document.getElementById("copy-emails").addEventListener("click", e => {
           e.preventDefault();
 
-          window.alert(emailsInput.getValues());
+          window.alert(emailsInput.getValues().map(({value}) => value).join(','));
         });
       });
     </script>

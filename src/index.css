@@ -29,11 +29,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   max-height: 135px; /* this value cuts the last line in half, so that user can get a  hint that input is scrollable */
-}
-
-.interactive-input {
-  display: flex;
-  flex-wrap: wrap;
+  overflow-y: scroll;
 }
 
 .interactive-input-value {
@@ -44,16 +40,33 @@
   display: flex;
   flex-basis: auto;
   margin: 2px;
+  position: relative;
 }
 
-.interactive-input-value_invalid {
+.interactive-input-value__invalid {
+  background: none;
+}
+
+.interactive-input-value__invalid:after {
+  display: block;
+  position: absolute;
+  border-top: 1px dashed #D92929;
+  content: "";
+  left: 8px;
+  right: 8px;
+  bottom: 0;
 }
 
 .interactive-input-delete-btn {
   border: none;
   background: none;
   font-size: 16px;
+  line-height: 1;
   border-radius: 0 100px 100px 0;
+}
+
+.interactive-input-delete-btn:active {
+  color: inherit;
 }
 
 .interactive-input-new-value {
