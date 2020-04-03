@@ -1,5 +1,5 @@
 .interactive-input-host {
-  background: #F8F8F7;
+  background: #f8f8f7;
   border-radius: 8px;
   font-family: "Open Sans", sans-serif;
   font-size: 14px;
@@ -20,8 +20,8 @@
 .interactive-input-container {
   background: #fff;
   border-radius: 8px 8px 0 0;
-  background: #FFFFFF;
-  border: 1px solid #C3C2CF;
+  background: #ffffff;
+  border: 1px solid #c3c2cf;
   box-sizing: border-box;
   border-radius: 4px;
   padding: 6px;
@@ -44,11 +44,9 @@
   display: flex;
   flex-basis: auto;
   margin: 2px;
-
 }
 
 .interactive-input-value_invalid {
-  
 }
 
 .interactive-input-delete-btn {
