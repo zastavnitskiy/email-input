@@ -82,7 +82,7 @@
         document.getElementById("add-email").addEventListener("click", e => {
           e.preventDefault();
 
-          emailsInput.addValue(randomEmail());
+          emailsInput.addItem(randomEmail());
         });
 
         document
@@ -125,7 +125,7 @@
         document.getElementById("copy-emails").addEventListener("click", e => {
           e.preventDefault();
 
-          window.alert(emailsInput.getValues().map(({value}) => value).join(','));
+          window.alert(emailsInput.getItems().map(({value}) => value).join(','));
         });
       });
     </script>

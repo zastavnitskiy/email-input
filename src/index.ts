@@ -7,28 +7,28 @@ declare global {
 }
 
 interface Subscriber {
-  (values: Value[]): void;
+  (values: Item[]): void;
 }
 
-interface Value {
+interface Item {
   valid: boolean,
   value: string
 }
 
 class Model {
-  private data: Value[];
+  private data: Item[];
   private subscribers: Subscriber[];
 
-  constructor(values: string[]) {
-    this.data = this.createValues(values);
+  constructor(items: string[]) {
+    this.data = this.createItems(items);
     this.subscribers = [];
   }
 
-  private createValues(values: string[]): Value[] {
-    return values.map(value => value.trim()).filter(Boolean).map(text => this.createValue(text))
+  private createItems(values: string[]): Item[] {
+    return values.map(value => value.trim()).filter(Boolean).map(value => this.createItem(value))
   }
 
-  private createValue(value: string): Value {
+  private createItem(value: string): Item {
     return {
       valid: this.validate(value),
       value
@@ -47,11 +47,11 @@ class Model {
     return values;
   }
 
-  addValue(value: string): Promise<Value[]> {
+  addItem(value: string): Promise<Item[]> {
     return new Promise((resolve, reject) => {
       try {
-        const cleanValues = this.createValues(this.processRawInput(value));
-        this.data = [...this.data, ...cleanValues];
+        const items = this.createItems(this.processRawInput(value));
+        this.data = [...this.data, ...items];
       } catch (e) {
         reject("Failed to add new values");
       }
@@ -62,14 +62,14 @@ class Model {
         // this is ok
       }
 
-      resolve(this.values);
+      resolve(this.data);
     });
   }
 
-  deleteValue(value: string): Promise<Value[]> {
+  deleteItem(value: string): Promise<Item[]> {
     return new Promise((resolve, reject) => {
       try {
-        this.data = this.data.filter(existingValue => existingValue.value !== value);
+        this.data = this.data.filter(item => item.value !== value);
       } catch (e) {
         reject("Failed to delete");
       }
@@ -86,17 +86,17 @@ class Model {
 
   private notifySubscribers() {
     this.subscribers.forEach(subscriber => {
-      subscriber(this.values);
+      subscriber(this.data);
     });
   }
 
-  public get values(): Value[] {
+  public get items(): Item[] {
     return this.data;
   }
 
   public subscribe(subscriber: Subscriber) {
     this.subscribers = [...this.subscribers, subscriber];
-    subscriber(this.values);
+    subscriber(this.data);
     return () =>
       (this.subscribers = this.subscribers.filter(
         existingSubscriber => existingSubscriber !== subscriber
@@ -109,7 +109,7 @@ class View {
   private nodes: Map<string, HTMLDivElement>;
   private textInput: HTMLInputElement;
 
-  constructor(node: HTMLDivElement, values: Value[]) {
+  constructor(node: HTMLDivElement, items: Item[]) {
     this.container = node;
     this.nodes = new Map();
 
@@ -121,11 +121,11 @@ class View {
     this.container.appendChild(this.textInput);
   }
 
-  private createValueElement(value: Value): HTMLDivElement {
+  private createItemNode(item: Item): HTMLDivElement {
     const node = document.createElement("div");
     node.classList.add("interactive-input-value");
-    node.innerText = value.value;
-    if (!value.valid) {
+    node.innerText = item.value;
+    if (!item.valid) {
       node.classList.add('interactive-input-value__invalid')
     }
 
@@ -134,12 +134,12 @@ class View {
     deleteBtn.type = "button";
     deleteBtn.name = "delete-value";
     deleteBtn.classList.add("interactive-input-delete-btn");
-    deleteBtn.dataset["value"] = value.value;
+    deleteBtn.dataset["value"] = item.value;
     node.appendChild(deleteBtn);
 
-    if (value.valid) {
+    if (item.valid) {
       const dataInput = document.createElement('input');
-      dataInput.value = value.value;
+      dataInput.value = item.value;
       dataInput.type = 'hidden';
       dataInput.name = "email";
       node.appendChild(dataInput);
@@ -147,18 +147,18 @@ class View {
     return node;
   }
 
-  private appendValueNode(valueNode: HTMLDivElement) {
+  private appendItemNode(valueNode: HTMLDivElement) {
     this.container.insertBefore(valueNode, this.textInput);
   }
 
-  public update(values: Value[]) {
-    const valuesSet = new Set(values.map(({value}) => value));
+  public update(items: Item[]) {
+    const valuesSet = new Set(items.map(({value}) => value));
 
-    values.forEach((value) => {
-      if (!this.nodes.has(value.value)) {
-        const node = this.createValueElement(value);
-        this.nodes.set(value.value, node);
-        this.appendValueNode(node);
+    items.forEach((item) => {
+      if (!this.nodes.has(item.value)) {
+        const node = this.createItemNode(item);
+        this.nodes.set(item.value, node);
+        this.appendItemNode(node);
       }
     });
 
@@ -174,10 +174,8 @@ class View {
 }
 
 window.EmailsInput = class EmailsInput {
-  // private values: string[]
   private node: HTMLDivElement;
   private interactiveInputContainer: HTMLDivElement;
-  // private interactiveInput: HTMLDivElement;
 
   private model: Model;
   private view: View;
@@ -190,7 +188,10 @@ window.EmailsInput = class EmailsInput {
     );
 
     const valuesFromHTML = children.map(child => child.value);
-    const valueNodes = children;
+    children.forEach(child => {
+      child.setAttribute("hidden", "hidden")
+      child.setAttribute("disabled", "disabled");
+    });
 
     /** Prepare interactive HTML markup */
     this.node.classList.add("interactive-input-host");
@@ -199,15 +200,11 @@ window.EmailsInput = class EmailsInput {
     this.interactiveInputContainer.classList.add("interactive-input-container");
     this.node.appendChild(this.interactiveInputContainer);
 
-    valueNodes.forEach(child => {
-      child.setAttribute("hidden", "hidden")
-      child.setAttribute("disabled", "disabled");
-    });
-
     /** Init data-model and prepare for interactivity */
     this.model = new Model(valuesFromHTML);
-    this.view = new View(this.interactiveInputContainer, this.model.values);
-    this.model.subscribe(values => this.view.update(values));
+    this.view = new View(this.interactiveInputContainer, this.model.items);
+
+    this.model.subscribe(items => this.view.update(items));
     this.node.addEventListener("focusout", this.handleFocusOutEvent.bind(this));
     this.node.addEventListener("keydown", this.handleKeydownEvent.bind(this));
     this.node.addEventListener("click", this.handleClick.bind(this));
@@ -226,7 +223,7 @@ window.EmailsInput = class EmailsInput {
       const email = target.dataset["value"];
 
       if (email) {
-        this.deleteValue(email);
+        this.deleteItem(email);
       }
     }
   }
@@ -243,7 +240,7 @@ window.EmailsInput = class EmailsInput {
       if (keyCode === 13) {
         event.preventDefault();
 
-        this.addValue(target.value).then(() => {
+        this.addItem(target.value).then(() => {
           target.value = "";
         });
       }
@@ -258,7 +255,7 @@ window.EmailsInput = class EmailsInput {
     const target = event.target as HTMLInputElement;
     const value = target.value;
     if (target.name === "text-input" && value.trim().endsWith(",")) {
-      this.addValue(target.value);
+      this.addItem(target.value);
       target.value = "";
     }
   }
@@ -271,25 +268,25 @@ window.EmailsInput = class EmailsInput {
     const target = event.target as HTMLInputElement;
 
     if (target.name === "text-input") {
-      this.addValue(target.value);
+      this.addItem(target.value);
       target.value = "";
     }
   }
 
-  public addValue(rawInput: string): Promise<Value[]> {
-    return this.model.addValue(rawInput);
+  public addItem(rawInput: string): Promise<Item[]> {
+    return this.model.addItem(rawInput);
   }
 
-  public deleteValue(valueToDelete: string): Promise<Value[]> {
-    return this.model.deleteValue(valueToDelete);
+  public deleteItem(valueToDelete: string): Promise<Item[]> {
+    return this.model.deleteItem(valueToDelete);
   }
 
   public getCount(): number {
-    return this.model.values.length;
+    return this.model.items.length;
   }
 
-  public getValues(): Value[] {
-    return this.model.values;
+  public getItems(): Item[] {
+    return this.model.items;
   }
 
   public subscribe(subscriber: Subscriber) {
