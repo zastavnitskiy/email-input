@@ -34,9 +34,36 @@
         outline: 0;
         cursor: pointer;
       }
+
+      .intro {
+        margin: 50px;
+        font-family: "Open Sans", sans-serif;
+        color: #050038;
+        width: 500px;
+      }
     </style>
   </head>
   <body>
+    <div class="intro">
+      <h3>Hey!</h3>
+      <p>
+        Thank you for the task!
+        
+      </p><p>I enjoyed building something from scratch,
+        without libraries and a design system!
+      </p>
+      <p>
+        It felt like good old 2013, before we had React, Components, css-in-js
+        and js fatique 😃
+      </p>
+      <p>
+        I hope you will enjoy going through the
+        <a href="https://github.com/zastavnitskiy/email-input" target="_blank"
+          >source code</a
+        >.
+      </p>
+      <p>Pavel</p>
+    </div>
     <form class="interactive-input-preview">
       <div id="emails-input">
         <h2>Share <strong>Board name</strong> with others</h2>
@@ -78,15 +105,17 @@
       });
     </script>
 
-    <form
-      class="interactive-input-preview"
-    >
+    <form class="interactive-input-preview">
       <!-- this is an example of a container with limited height — our widget will be scrollable -->
       <div style="height: 300px; overflow: hidden;">
         <div id="emails-input2">
-          <h2>Share <strong>Board name</strong> with others</h2>
+          <h2>Example with limited container width and height</h2>
 
-          <input type="text" name="email" value="pasha.zastavnitskiy@gmail.com" />
+          <input
+            type="text"
+            name="email"
+            value="pasha.zastavnitskiy@gmail.com"
+          />
 
           <input type="text" name="email" value="zapav@ya.ru" />
           <input value="john@miro.com" name="email" type="text" />

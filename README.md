@@ -86,7 +86,7 @@ Replace emails with new values. This is also a convinient way to reset the input
 #### `subscribe(subscriber: function)`
 Subscribe to the changes in the input.
 
-## Architecture overview some reflection
+## Architecture overview and some reflection
 
 Because the task disallowed using any dependencies, I used a poor-man MVC architecture to have some structure.
 `Model.ts` is responsible for storing the data, `View.ts` is responsible for rendering, and controller in `index.ts`
